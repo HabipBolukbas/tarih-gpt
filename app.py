@@ -12,12 +12,12 @@ if os.path.exists(MEMORY_PATH):
 else:
     memory = {}
 
-# 🏠 Ana sayfa
+# Ana sayfa
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# 📅 Bugün Ne Oldu (Wikipedia'dan gerçek veriler)
+#  Bugün Ne Oldu (Wikipedia'dan gerçek verileri alır)
 @app.route("/today", methods=["GET"])
 def today():
     now = datetime.now()
@@ -45,7 +45,7 @@ def today():
         return jsonify({"events": [], "births": [], "error": str(e)}), 200
 
 
-# 💬 Chat endpointi
+#  Chat endpointi
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -69,7 +69,7 @@ def chat():
         "atatürk": "atatürk"
     }
 
-    # 🔢 1️⃣ Basit matematik işlemleri (örnek: 2+2, 3*5, (5+2)/3)
+    #  Basit matematik işlemleri (örnek: 2+2, 3*5, (5+2)/3)
     if re.match(r"^[\d\s\+\-\*\/\.\(\)]+$", user_message_lower):
         try:
             result = eval(user_message_lower)
@@ -77,7 +77,7 @@ def chat():
         except:
             pass  # diğer işlemlere geç
 
-    # 💬 2️⃣ "kimdir" sorgusu
+    #  "kimdir" sorgusu
     if "kimdir" in user_message_lower or re.search(r"\bkim\b", user_message_lower):
         name = user_message_lower.replace("kimdir", "").strip()
         name = aliases.get(name, name)
@@ -87,7 +87,7 @@ def chat():
         else:
             return jsonify({"reply": f"'{name}' hakkında kayıtlı bilgi bulunamadı 😕"})
 
-    # 💬 3️⃣ Doğum tarihi sorgusu
+    #  Doğum tarihi sorgusu
     date_pattern = r"(\d{1,2}\s*(ocak|şubat|mart|nisan|mayıs|haziran|temmuz|ağustos|eylül|ekim|kasım|aralık)\s*\d{0,4})"
     date_match = re.search(date_pattern, user_message_lower, re.IGNORECASE)
     if date_match:
@@ -98,7 +98,7 @@ def chat():
                 return jsonify({"reply": f"{v['name']} doğdu ({v['info']})"})
         return jsonify({"reply": "Bu tarihte doğan bir kişi bulunamadı 😕"})
 
-    # 💬 4️⃣ Wikipedia fallback
+    #  Wikipedia fallback
     query = urllib.parse.quote(user_message)
     search_url = f"https://tr.wikipedia.org/w/api.php?action=query&list=search&srsearch={query}&utf8=&format=json&origin=*"
 
