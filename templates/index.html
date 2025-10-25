@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tarih GPT</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f6f7;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #202123;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        #chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        #messages div {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .user {
+            background: #dcf8c6;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #input-container {
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            background: #f0f0f0;
+            font-size: 15px;
+        }
+
+        #send-btn {
+            background-color: #10a37f;
+            border: none;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 50%;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s ease;
+        }
+
+        #send-btn:hover {
+            background-color: #0d8e6d;
+        }
+
+        #send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        #today-box {
+            padding: 10px;
+            font-size: 14px;
+            color: #444;
+            background: #fff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #today-events li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>Tarih Asistanı</header>
+
+    <div id="chat-container">
+        <div id="today-box">
+            <b>📅 Bugün:</b>
+            <ul id="today-events">
+                <li>Yükleniyor...</li>
+            </ul>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="input-container">
+            <input id="user-input" type="text" placeholder="Bir şey yaz..." autocomplete="off" />
+            <button id="send-btn" title="Gönder">
+                <!-- Gönder ikonu (uçak simgesi) -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 📅 Bugünle ilgili verileri al
+        async function loadToday() {
+            try {
+                const res = await fetch("/today");
+                const data = await res.json();
+                const list = document.getElementById("today-events");
+
+                if ((!data.events || !data.events.length) && (!data.births || !data.births.length)) {
+                    list.innerHTML = "<li>Bugünle ilgili bilgi bulunamadı.</li>";
+                    return;
+                }
+
+                let html = "";
+                if (data.events?.length) {
+                    html += "<li><b>Olaylar:</b></li>";
+                    data.events.forEach(ev => {
+                        html += `<li><small><b>${ev.year}</b></small> — ${ev.text}</li>`;
+                    });
+                }
+
+                if (data.births?.length) {
+                    html += "<li style='margin-top:10px;'><b>Doğanlar:</b></li>";
+                    data.births.forEach(b => {
+                        html += `<li><small><b>${b.year}</b></small> — ${b.text}</li>`;
+                    });
+                }
+
+                list.innerHTML = html;
+            } catch (err) {
+                document.getElementById("today-events").innerHTML = "<li>Bilgi alınamadı 😕</li>";
+            }
+        }
+
+        // 💬 Mesaj gönderme
+        async function sendMessage() {
+            const input = document.getElementById("user-input");
+            const text = input.value.trim();
+            if (!text) return;
+
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div class="user">${text}</div>`;
+            input.value = "";
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const res = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await res.json();
+                messages.innerHTML += `<div class="bot">${data.reply}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            } catch {
+                messages.innerHTML += `<div class="bot">Bir hata oluştu 😕</div>`;
+            }
+        }
+
+        // ✅ Enter veya buton ile gönder
+        document.getElementById("user-input").addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById("send-btn").addEventListener("click", sendMessage);
+
+        window.onload = loadToday;
+    </script>
+</body>
+
+</html>

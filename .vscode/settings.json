@@ -1,0 +1,10 @@
+{
+    "workbench.colorTheme": "Default Dark Modern",
+    "dart.flutterSdkPath": "C:\\src\\flutter",
+    "git.suggestSmartCommit": false,
+    "python.formatting.provider": "autopep8",
+    "python.formatting.autopep8Path": "C:\\Users\\habip\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\autopep8.exe",
+    "editor.formatOnSave": true,
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
+}
